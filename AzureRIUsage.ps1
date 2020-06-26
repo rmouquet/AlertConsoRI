@@ -2,6 +2,8 @@
 $datestart=Get-date((Get-date).AddDays(-2)) -Format "yyyy-MM-dd"
 $dateend=Get-date((Get-date).AddDays(-1)) -Format "yyyy-MM-dd"
 
+
+Import-Module -Name Az.reservations
 #Création d'une liste de RI order
 $RIorderList=@()
 
@@ -12,11 +14,13 @@ foreach($sub in $subs){
     Select-AzSubscription -SubscriptionId $sub.id
     #Récupération des RIOrders de la souscription
     $order=Get-AzReservationOrderId
-    $ordersid=($order.AppliedReservationOrderId).Substring($length -36, 36)
-    foreach ($orderid in $ordersid){
+    $reservationorders=($order.AppliedReservationOrderId)
+    foreach ($reservationorder in $reservationorders){
+        $length=$reservationorder.length
+        $reservationorderid=$reservationorder.Substring($length -36, 36)
         #On teste si on a déja référencé cet achat, en définitive si la RI est en shared ou en single souscription
-            if($RIorderList.id -notcontains $orderid){
-                $newid=([PSCustomObject]@{id = "$orderid"})
+            if($RIorderList.id -notcontains $reservationorderid){
+                $newid=([PSCustomObject]@{id = "$reservationorderid"})
                 $RIorderList += $newid
             }
     }
@@ -56,6 +60,7 @@ foreach($orderid in $RIorderList){
             Write-Host "Attention l'utilisation pour la RI $id n'est pas optimale (infèrieur à 90%)"
             ###################################################
             ##Ajouter ici d'autres actions de remédiations :)##
+            ##Send-MailMessage -to "to@yourdomain.com" -from "from@yourdomain.com" -Body "You have an alert on you ri $id" -SmtpServer "yoursmtpserver.com"
             ###################################################
         }
     }
